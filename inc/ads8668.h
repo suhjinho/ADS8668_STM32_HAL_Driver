@@ -6,6 +6,7 @@
  */
 
 #include <stm32f3xx_hal.h>
+#include <string.h>
 
 #ifndef INC_ADS8668_H_
 #define INC_ADS8668_H_
@@ -30,18 +31,9 @@ struct ads8668_handler {
 
 typedef struct ads8668_handler ADS8668_HandleTypeDef;
 
-/*
- * ads8668.c
- *
- *  Created on: Aug 3, 2020
- *      Author: Falk
- */
-
-#include "../inc/ads8668.h"
-
-void ADS8668_SetRange(ADS8668_HandleTypeDef hads, uint8_t channel, uint8_t range);
-void ADS8668_Reset(ADS8668_HandleTypeDef hads);
-void ADS8668_ReadAutoScan(ADS8668_HandleTypeDef hads, uint16_t* channels);
+void ADS8668_SetRange(ADS8668_HandleTypeDef* hads, uint8_t channel, uint8_t range);
+void ADS8668_Reset(ADS8668_HandleTypeDef* hads);
+void ADS8668_ReadAutoScan(ADS8668_HandleTypeDef* hads, uint16_t* channels);
 
 
 #endif /* INC_ADS8668_H_ */
