@@ -8,8 +8,8 @@
 #include "../inc/ads8668.h"
 
 
-static uint16_t tx[4] = {0};
-static uint16_t rx[4] = {0};
+static uint8_t tx[4] = {0};
+static uint8_t rx[4] = {0};
 
 void ADS8668_SetRange(ADS8668_HandleTypeDef* hads, uint8_t channel, uint8_t range) {
 	uint16_t addr  = 0x05 + channel;
@@ -36,20 +36,26 @@ void ADS8668_AutoReset(ADS8668_HandleTypeDef* hads) {
 }
 
 void ADS8668_ReadAutoScan(ADS8668_HandleTypeDef* hads, uint16_t* channels) {
-	bzero(tx, sizeof(uint16_t)*4); // Continue Auto-Scan
+	bzero(tx, sizeof(uint8_t)*4);
 	tx[0] = 0xA0; // Auto Reset
-	for (uint8_t ch_index = 0; ch_index < 8; ch_index++)
-	{
+	for (uint8_t ch_index = 0; ch_index < 8; ch_index++) {
 		HAL_GPIO_WritePin(hads->CS_PORT, hads->CS_PIN, GPIO_PIN_RESET);
+
 		HAL_StatusTypeDef status = HAL_BUSY;
 		while(status != HAL_OK) {
-			status = HAL_SPI_TransmitReceive_IT(hads->hspi, (uint8_t*)tx, (uint8_t*)rx, 4);
+			status = HAL_SPI_Transmit_IT(hads->hspi, (uint8_t*)tx, 2);
 		}
 		while(HAL_SPI_GetState(hads->hspi) != HAL_SPI_STATE_READY);
+
 		HAL_GPIO_WritePin(hads->CS_PORT, hads->CS_PIN, GPIO_PIN_SET);
 
-		bzero(tx, sizeof(uint16_t)*4); // Continue Auto-Scan
+		while(status != HAL_OK) {
+			status = HAL_SPI_Receive_IT(hads->hspi, (uint8_t*)rx, 2);
+		}
+		while(HAL_SPI_GetState(hads->hspi) != HAL_SPI_STATE_READY);
 
-		channels[ch_index] = rx[3] & rx[2]<<8;
+		bzero(tx, sizeof(uint8_t)*4); // Continue Auto-Scan
+
+		channels[ch_index] = rx[0] & rx[1]<<8;
 	}
 }
