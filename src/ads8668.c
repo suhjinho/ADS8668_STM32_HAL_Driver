@@ -14,11 +14,11 @@ static uint8_t rx[4] = {0};
 void ADS8668_SetRange(ADS8668_HandleTypeDef* hads, uint8_t channel, uint8_t range) {
 	uint16_t addr  = 0x05 + channel;
 	uint16_t rw    = 0x01;
-
-	tx[0] = (((addr << 1) + rw) << 8) + range;
+	tx[1] = (addr << 1) | rw;
+	tx[0] = range;
 
 	HAL_GPIO_WritePin(hads->CS_PORT, hads->CS_PIN, GPIO_PIN_RESET);
-	HAL_SPI_Transmit_IT(hads->hspi, (uint8_t*)tx, 4);
+	HAL_SPI_TransmitReceive_IT(hads->hspi, (uint8_t*)tx, rx, 2);
 	while(hads->hspi->State != HAL_SPI_STATE_READY);
 	HAL_GPIO_WritePin(hads->CS_PORT, hads->CS_PIN, GPIO_PIN_SET);
 }
@@ -74,6 +74,7 @@ void ADS8668_ReadAutoScan(ADS8668_HandleTypeDef* hads, uint16_t* channels) {
 
 		bzero(tx, sizeof(uint8_t)*4); // Continue Auto-Scan
 
-		channels[ch_index] = rx[2] | rx[3]<<8;
+		channels[ch_index] = (rx[3]<<8 | rx[2]) >> 4;
+		//channels[ch_index] &= 0xFFF;
 	}
 }
